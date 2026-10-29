@@ -1,0 +1,1961 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aviator Predictor • Real-Time Signals</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ---------- RESET & BASE ---------- */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ---------- OVERLAY ---------- */
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      z-index: 998;
+    }
+    .overlay.active { opacity: 1; visibility: visible; }
+
+    /* ---------- MOBILE NAV ---------- */
+    .mobile-nav {
+      position: fixed; top: 0; right: -100%;
+      width: min(80%, 320px); height: 100dvh;
+      background: #0f0f0f;
+      border-left: 1px solid #1f1f1f;
+      padding: 2rem 1.5rem;
+      display: flex; flex-direction: column; gap: 0.25rem;
+      overflow-y: auto;
+      transition: right 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+      z-index: 999;
+    }
+    .mobile-nav.open { right: 0; }
+    .mobile-nav a {
+      text-decoration: none; color: #d4d4d4;
+      font-size: 1.1rem; font-weight: 500;
+      padding: 0.9rem 0.25rem;
+      border-bottom: 1px solid #1a1a1a;
+      transition: color 0.2s, padding-left 0.25s;
+      display: flex; align-items: center; gap: 0.75rem;
+    }
+    .mobile-nav a:hover { color: #fff; padding-left: 0.75rem; }
+    .mobile-nav .nav-footer {
+      margin-top: auto; padding-top: 2rem;
+      font-size: 0.8rem; color: #555;
+      border-top: 1px solid #1a1a1a;
+    }
+
+    /* ---------- HEADER ---------- */
+    header {
+      position: sticky; top: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0.9rem 1.8rem;
+      background: rgba(10, 10, 10, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1a1a1a;
+      z-index: 900;
+    }
+    .logo {
+      font-weight: 800; font-size: 1.35rem;
+      letter-spacing: -0.03em; color: #fff;
+      display: flex; align-items: center; gap: 0.5rem;
+      cursor: pointer;
+    }
+    .logo .plane-icon { color: #e53935; font-size: 1.5rem; line-height: 1; }
+    .logo span { color: #e53935; }
+
+    .desktop-nav { display: flex; gap: 1.8rem; align-items: center; }
+    .desktop-nav a {
+      text-decoration: none; color: #b0b0b0;
+      font-weight: 500; font-size: 0.8rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      transition: color 0.2s;
+    }
+    .desktop-nav a:hover, .desktop-nav a.active { color: #e53935; }
+
+    .header-actions { display: flex; align-items: center; gap: 1rem; }
+    .lang-selector {
+      display: flex; align-items: center; gap: 0.35rem;
+      color: #b0b0b0; font-size: 0.8rem; font-weight: 500;
+      cursor: pointer; padding: 0.4rem 0.6rem;
+      border-radius: 8px; transition: background 0.2s;
+    }
+    .lang-selector:hover { background: #1a1a1a; }
+
+    .subscribe-btn {
+      background: #e53935; color: white;
+      border: none; padding: 0.6rem 1.4rem;
+      border-radius: 8px; font-weight: 700;
+      font-size: 0.8rem; text-transform: uppercase;
+      letter-spacing: 0.05em; cursor: pointer;
+      transition: background 0.2s, transform 0.15s;
+      text-decoration: none; display: inline-block;
+    }
+    .subscribe-btn:hover { background: #c62828; transform: translateY(-1px); }
+
+    .hamburger {
+      display: none; background: none; border: none;
+      font-size: 1.8rem; line-height: 1; cursor: pointer;
+      color: #e5e5e5; padding: 0.2rem 0.5rem;
+      border-radius: 8px; transition: background 0.2s;
+    }
+    .hamburger:hover { background: #1a1a1a; }
+
+    @media (max-width: 900px) {
+      .desktop-nav { display: none; }
+      .hamburger { display: block; }
+      .header-actions .subscribe-btn { display: none; }
+    }
+
+    /* ---------- HERO ---------- */
+    #hero {
+      display: grid; grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 65px);
+      max-width: 1400px; margin: 0 auto; width: 100%;
+      align-items: center; position: relative;
+    }
+    .hero-content {
+      padding: 4rem 3rem 4rem 2rem;
+      display: flex; flex-direction: column; justify-content: center;
+      position: relative; z-index: 2;
+    }
+    .hero-content h1 {
+      font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+      font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.05; color: #fff; margin-bottom: 1.2rem;
+    }
+    .hero-content h1 .highlight { color: #e53935; }
+    .hero-content p {
+      font-size: 1.05rem; color: #a0a0a0;
+      max-width: 480px; margin-bottom: 2rem; line-height: 1.65;
+    }
+    .hero-buttons { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: 0.5rem; padding: 0.9rem 1.8rem;
+      border-radius: 8px; font-weight: 700;
+      font-size: 0.85rem; text-transform: uppercase;
+      letter-spacing: 0.06em; text-decoration: none;
+      transition: all 0.2s ease; border: 1.5px solid transparent;
+      cursor: pointer; white-space: nowrap;
+    }
+    .btn-primary {
+      background: #e53935; color: white; border-color: #e53935;
+      box-shadow: 0 8px 25px -6px rgba(229, 57, 53, 0.5);
+    }
+    .btn-primary:hover {
+      background: #c62828; border-color: #c62828;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -8px rgba(229, 57, 53, 0.6);
+    }
+    .btn-outline {
+      background: transparent; color: #fff; border-color: #444;
+    }
+    .btn-outline:hover {
+      background: #1a1a1a; border-color: #666;
+      transform: translateY(-2px);
+    }
+
+    .hero-features { display: flex; flex-wrap: wrap; gap: 1.5rem; }
+    .hero-feature {
+      display: flex; align-items: center; gap: 0.5rem;
+      color: #a0a0a0; font-size: 0.82rem; font-weight: 500;
+    }
+    .hero-feature .icon { color: #e53935; font-size: 1.1rem; line-height: 1; }
+
+    .hero-visual {
+      position: relative; height: 100%; min-height: 500px;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .hero-visual .visual-bg {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, #0a1a0a 0%, #0d1f0d 30%, #0a2a0a 60%, #061006 100%);
+      z-index: 0;
+    }
+    .hero-visual .visual-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 30% 50%, rgba(76, 175, 80, 0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 70% 70%, rgba(76, 175, 80, 0.1) 0%, transparent 50%);
+    }
+
+    .phone-mockup {
+      position: relative; z-index: 1;
+      width: 220px; height: 440px;
+      background: #1a1a1a; border-radius: 28px;
+      border: 3px solid #2a2a2a;
+      box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.9),
+                  0 0 60px -10px rgba(76, 175, 80, 0.15);
+      padding: 12px; transform: rotate(-4deg);
+      overflow: hidden;
+    }
+    .phone-screen {
+      width: 100%; height: 100%;
+      background: linear-gradient(180deg, #0d1f0d 0%, #0a1a0a 100%);
+      border-radius: 18px; overflow: hidden;
+      display: flex; flex-direction: column;
+      padding: 12px; gap: 8px;
+    }
+    .phone-notch {
+      width: 60px; height: 18px; background: #1a1a1a;
+      border-radius: 0 0 12px 12px; margin: 0 auto; flex-shrink: 0;
+    }
+    .phone-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 4px 0;
+    }
+    .phone-header .dot-group { display: flex; gap: 3px; }
+    .phone-header .dot-group span {
+      width: 6px; height: 6px; border-radius: 50%; background: #333;
+    }
+    .phone-header .dot-group span:first-child { background: #4caf50; }
+    .phone-header .signal {
+      font-size: 0.5rem; color: #4caf50; font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+
+    .multiplier-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 6px; flex: 1;
+    }
+    .multiplier-cell {
+      background: rgba(76, 175, 80, 0.12);
+      border-radius: 8px; border: 1px solid rgba(76, 175, 80, 0.2);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 6px; gap: 2px;
+    }
+    .multiplier-cell .value {
+      font-size: 1rem; font-weight: 800; color: #4caf50; line-height: 1.1;
+    }
+    .multiplier-cell .value.red { color: #e53935; }
+    .multiplier-cell .label {
+      font-size: 0.45rem; color: #666;
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;
+    }
+    .multiplier-cell.green {
+      background: rgba(76, 175, 80, 0.2);
+      border-color: rgba(76, 175, 80, 0.4);
+    }
+    .multiplier-cell.red {
+      background: rgba(229, 57, 53, 0.12);
+      border-color: rgba(229, 57, 53, 0.2);
+    }
+
+    .phone-mockup-2 {
+      position: absolute; z-index: 2;
+      width: 180px; height: 360px;
+      background: #1a1a1a; border-radius: 24px;
+      border: 3px solid #2a2a2a;
+      box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.9);
+      padding: 10px;
+      transform: rotate(6deg) translateX(120px) translateY(20px);
+      overflow: hidden; opacity: 0.95;
+    }
+    .phone-mockup-2 .phone-screen { padding: 10px; gap: 6px; }
+    .phone-mockup-2 .multiplier-cell .value { font-size: 0.85rem; }
+    .phone-mockup-2 .multiplier-cell .label { font-size: 0.4rem; }
+    .phone-mockup-2 .phone-notch { width: 50px; height: 15px; }
+
+    .hero-visual .play-btn {
+      position: absolute; z-index: 3;
+      width: 60px; height: 60px; border-radius: 50%;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255, 255, 255, 0.25);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.25s;
+      color: white; font-size: 1.4rem; padding-left: 4px;
+    }
+    .hero-visual .play-btn:hover {
+      background: rgba(255, 255, 255, 0.2); transform: scale(1.08);
+    }
+
+    @media (max-width: 1024px) {
+      #hero { grid-template-columns: 1fr; min-height: auto; }
+      .hero-content {
+        padding: 3.5rem 1.8rem 2rem;
+        text-align: center; align-items: center;
+      }
+      .hero-content p { max-width: 100%; }
+      .hero-buttons { justify-content: center; }
+      .hero-features { justify-content: center; }
+      .hero-visual { min-height: 420px; padding: 2rem 0; }
+      .phone-mockup-2 {
+        transform: rotate(6deg) translateX(90px) translateY(15px);
+        width: 150px; height: 300px;
+      }
+      .phone-mockup { width: 190px; height: 380px; }
+    }
+    @media (max-width: 500px) {
+      .hero-content h1 { font-size: 1.9rem; }
+      .hero-content p { font-size: 0.95rem; }
+      .btn { padding: 0.8rem 1.4rem; font-size: 0.78rem; }
+      .hero-visual { min-height: 360px; }
+      .phone-mockup { width: 160px; height: 320px; }
+      .phone-mockup-2 {
+        width: 130px; height: 260px;
+        transform: rotate(6deg) translateX(70px) translateY(10px);
+      }
+      .hero-visual .play-btn { width: 50px; height: 50px; font-size: 1.1rem; }
+    }
+
+    /* ---------- STATS BAR ---------- */
+    .stats-bar {
+      background: #0f0f0f;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+      padding: 2rem 1.8rem;
+    }
+    .stats-grid {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 2rem; text-align: center;
+    }
+    .stat-item .stat-value {
+      font-size: 2rem; font-weight: 800;
+      color: #e53935; letter-spacing: -0.03em; line-height: 1.1;
+    }
+    .stat-item .stat-label {
+      font-size: 0.8rem; color: #777;
+      text-transform: uppercase; letter-spacing: 0.08em;
+      font-weight: 600; margin-top: 0.3rem;
+    }
+
+    /* ---------- SECTIONS (GENERAL) ---------- */
+    section {
+      padding: 5rem 1.8rem;
+      max-width: 1200px; margin: 0 auto; width: 100%;
+    }
+    .section-label {
+      display: inline-block; font-size: 0.75rem;
+      font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: #e53935;
+      background: rgba(229, 57, 53, 0.1);
+      padding: 0.3rem 0.9rem; border-radius: 4px;
+      margin-bottom: 1rem;
+    }
+    h2 {
+      font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+      font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.1; margin-bottom: 1rem; color: #fff;
+    }
+    .section-sub {
+      font-size: 1.05rem; color: #888;
+      max-width: 600px; margin-bottom: 2.5rem; line-height: 1.65;
+    }
+
+    /* ---------- HOW IT WORKS ---------- */
+    #how-it-works { text-align: center; }
+    .steps {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem; margin-top: 2.5rem; counter-reset: step;
+    }
+    .step {
+      background: #111; padding: 2rem 1.5rem;
+      border-radius: 16px; border: 1px solid #1f1f1f;
+      text-align: center; transition: border-color 0.2s, transform 0.2s;
+    }
+    .step:hover { border-color: #333; transform: translateY(-4px); }
+    .step::before {
+      counter-increment: step; content: counter(step);
+      display: flex; align-items: center; justify-content: center;
+      width: 48px; height: 48px;
+      background: rgba(229, 57, 53, 0.15); color: #e53935;
+      font-weight: 800; font-size: 1.3rem; border-radius: 12px;
+      margin: 0 auto 1.2rem; border: 1px solid rgba(229, 57, 53, 0.25);
+    }
+    .step h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff; }
+    .step p { color: #888; font-size: 0.9rem; line-height: 1.6; }
+
+    /* ---------- FEATURES ---------- */
+    #features {
+      background: #0d0d0d; border-radius: 32px;
+      max-width: 1200px; margin: 2rem auto;
+      padding: 4rem 2rem; border: 1px solid #1a1a1a;
+    }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem; margin-top: 2.5rem;
+    }
+    .feature-item {
+      padding: 2rem 1.5rem; border-radius: 16px;
+      background: #111; border: 1px solid #1f1f1f;
+      text-align: left; transition: border-color 0.2s, background 0.2s;
+    }
+    .feature-item:hover { border-color: #333; background: #141414; }
+    .feature-icon { font-size: 1.8rem; margin-bottom: 1rem; display: block; }
+    .feature-item h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff; }
+    .feature-item p { font-size: 0.9rem; color: #888; line-height: 1.6; }
+
+    /* ---------- CTA ---------- */
+    #cta {
+      background: linear-gradient(135deg, #1a0505 0%, #0a0a0a 100%);
+      border: 1px solid #2a1010; color: white;
+      text-align: center; border-radius: 24px;
+      margin: 4rem auto; max-width: 1000px;
+      padding: 4rem 2rem; position: relative; overflow: hidden;
+    }
+    #cta::before {
+      content: ''; position: absolute; top: -50%; right: -20%;
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, rgba(229, 57, 53, 0.15) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+    #cta h2 { color: white; position: relative; z-index: 1; }
+    #cta p {
+      color: #999; max-width: 500px;
+      margin: 0 auto 2rem; font-size: 1.05rem;
+      position: relative; z-index: 1;
+    }
+    #cta .btn-primary { position: relative; z-index: 1; }
+
+    /* ---------- FAQ ---------- */
+    #faq { text-align: center; }
+    .faq-list {
+      max-width: 750px; margin: 2.5rem auto 0;
+      text-align: left; display: flex; flex-direction: column; gap: 1rem;
+    }
+    .faq-item {
+      background: #111; border-radius: 14px;
+      padding: 1.5rem 1.8rem; border: 1px solid #1f1f1f;
+      transition: border-color 0.2s;
+    }
+    .faq-item:hover { border-color: #333; }
+    .faq-item h4 { font-size: 1rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff; }
+    .faq-item p { color: #888; font-size: 0.9rem; line-height: 1.6; }
+
+    /* ---------- CONTACT ---------- */
+    #contact { text-align: center; }
+    .contact-form {
+      max-width: 520px; margin: 2rem auto 0;
+      display: flex; flex-direction: column; gap: 1rem;
+    }
+    .contact-form input,
+    .contact-form textarea {
+      padding: 1rem 1.25rem; border-radius: 12px;
+      border: 1px solid #2a2a2a; font-family: inherit;
+      font-size: 1rem; background: #111; color: #e5e5e5;
+      transition: border 0.2s, box-shadow 0.2s; outline: none;
+    }
+    .contact-form input:focus,
+    .contact-form textarea:focus {
+      border-color: #e53935;
+      box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.15);
+    }
+    .contact-form input::placeholder,
+    .contact-form textarea::placeholder { color: #555; }
+    .contact-form textarea {
+      border-radius: 12px; resize: vertical; min-height: 120px;
+    }
+
+    /* ---------- FOOTER ---------- */
+    footer {
+      padding: 2.5rem 1.8rem; text-align: center;
+      background: #050505; color: #555;
+      font-size: 0.85rem; border-top: 1px solid #1a1a1a;
+    }
+    footer .footer-links {
+      display: flex; justify-content: center; gap: 2rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    footer .footer-links a {
+      color: #777; text-decoration: none;
+      transition: color 0.2s; font-size: 0.8rem;
+      text-transform: uppercase; letter-spacing: 0.05em; font-weight: 500;
+    }
+    footer .footer-links a:hover { color: #e53935; }
+
+    /* ---------- BACK TO TOP ---------- */
+    #backToTop {
+      position: fixed; bottom: 2rem; right: 2rem;
+      width: 3.2rem; height: 3.2rem; border-radius: 12px;
+      background: #e53935; color: white; border: none;
+      font-size: 1.4rem; display: flex;
+      align-items: center; justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 8px 25px -5px rgba(229, 57, 53, 0.5);
+      opacity: 0; visibility: hidden;
+      transition: opacity 0.25s, visibility 0.25s, background 0.2s, transform 0.15s;
+      z-index: 950; line-height: 1;
+    }
+    #backToTop.visible { opacity: 1; visibility: visible; }
+    #backToTop:hover { background: #c62828; transform: translateY(-3px); }
+    #backToTop:active { transform: translateY(0); }
+
+    /* ============================================
+       SUBSCRIPTION PLANS
+       ============================================ */
+    #subscription {
+      background: #0a0a0a;
+      padding: 5rem 1.8rem 6rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      text-align: center;
+      display: none;
+    }
+    #subscription.active {
+      display: block;
+      animation: fadeInUp 0.5s ease;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #subscription .subscription-header { margin-bottom: 3.5rem; }
+    #subscription .subscription-header .section-label {
+      background: rgba(229, 57, 53, 0.15);
+      color: #e53935;
+    }
+    #subscription h2 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 0.8rem;
+    }
+    #subscription .section-sub {
+      margin-left: auto; margin-right: auto;
+      text-align: center; color: #999; font-size: 1.1rem;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .plan-card {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      border-radius: 24px;
+      padding: 2.5rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+    }
+    .plan-card:hover {
+      transform: translateY(-8px);
+      border-color: #333;
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+    }
+
+    .plan-card.featured {
+      background: linear-gradient(180deg, #1a0808 0%, #111 100%);
+      border: 2px solid #e53935;
+      box-shadow: 0 20px 50px -15px rgba(229, 57, 53, 0.35);
+      transform: scale(1.03);
+    }
+    .plan-card.featured:hover {
+      transform: scale(1.03) translateY(-8px);
+      border-color: #f44336;
+      box-shadow: 0 30px 70px -15px rgba(229, 57, 53, 0.5);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e53935;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.4rem 1.2rem;
+      border-radius: 100px;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(229, 57, 53, 0.5);
+    }
+    .plan-card.featured .plan-badge::before { content: '★ '; }
+
+    .plan-name {
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #e53935;
+      margin-bottom: 1rem;
+    }
+    .plan-card:not(.featured) .plan-name { color: #777; }
+
+    .plan-price {
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0.15rem;
+    }
+    .plan-price .currency {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.6rem;
+      color: #e53935;
+    }
+    .plan-price .period {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #777;
+      align-self: flex-end;
+      margin-bottom: 0.4rem;
+    }
+
+    .plan-duration {
+      font-size: 0.95rem;
+      color: #aaa;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .plan-savings {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #4caf50;
+      background: rgba(76, 175, 80, 0.12);
+      padding: 0.2rem 0.7rem;
+      border-radius: 100px;
+      margin-bottom: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .plan-savings.invisible { visibility: hidden; }
+
+    .plan-divider {
+      height: 1px;
+      background: #1f1f1f;
+      margin: 0 0 1.8rem;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      text-align: left;
+      margin-bottom: 2rem;
+      flex: 1;
+    }
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      color: #bbb;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .plan-features li::before {
+      content: '✓';
+      color: #e53935;
+      font-weight: 800;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .plan-card.featured .plan-features li::before { color: #4caf50; }
+
+    .plan-btn {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      border: 1.5px solid transparent;
+      font-family: inherit;
+    }
+    .plan-btn.primary {
+      background: #e53935;
+      color: white;
+      border-color: #e53935;
+      box-shadow: 0 8px 25px -6px rgba(229, 57, 53, 0.5);
+    }
+    .plan-btn.primary:hover {
+      background: #c62828;
+      border-color: #c62828;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -8px rgba(229, 57, 53, 0.6);
+    }
+    .plan-btn.outline {
+      background: transparent;
+      color: #fff;
+      border-color: #333;
+    }
+    .plan-btn.outline:hover {
+      background: #1a1a1a;
+      border-color: #666;
+      transform: translateY(-2px);
+    }
+
+    .plan-note {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .subscription-footer {
+      margin-top: 4rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .subscription-footer .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #777;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .subscription-footer .trust-item .icon {
+      color: #e53935;
+      font-size: 1.1rem;
+    }
+
+    .back-home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #888;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      transition: color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .back-home-link:hover { color: #e53935; }
+
+    @media (max-width: 700px) {
+      .plan-card.featured { transform: scale(1); }
+      .plan-card.featured:hover { transform: translateY(-8px); }
+      .plan-price { font-size: 3rem; }
+      #subscription { padding: 3.5rem 1.2rem 4rem; }
+    }
+
+    /* ============================================
+       MULTI-STEP CHECKOUT MODAL
+       ============================================ */
+    .checkout-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1.5rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    .checkout-modal.active {
+      display: flex;
+      opacity: 1;
+    }
+    
+    .checkout-content {
+      background: #111;
+      border: 1px solid #2a2a2a;
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      max-width: 480px;
+      width: 100%;
+      position: relative;
+      box-shadow: 0 30px 70px -20px rgba(0, 0, 0, 0.9);
+      animation: popIn 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.9) translateY(20px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .checkout-close {
+      position: absolute;
+      top: 1.2rem;
+      right: 1.2rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #888;
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      line-height: 1;
+    }
+    .checkout-close:hover { background: #2a2a2a; color: #fff; }
+
+    /* Progress Indicator */
+    .checkout-progress {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .progress-step {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: #1a1a1a;
+      color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+    }
+    .progress-step.active {
+      background: #e53935;
+      color: white;
+      box-shadow: 0 0 15px rgba(229, 57, 53, 0.4);
+    }
+    .progress-step.completed {
+      background: #4caf50;
+      color: white;
+    }
+    .progress-line {
+      width: 40px;
+      height: 2px;
+      background: #1a1a1a;
+      transition: background 0.3s;
+    }
+    .progress-line.active { background: #4caf50; }
+
+    /* Checkout Steps */
+    .checkout-step {
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    .checkout-step.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    .checkout-step h3 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 0.5rem;
+      text-align: center;
+    }
+    .checkout-step p {
+      color: #888;
+      font-size: 0.9rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Step 1: Country & Plan Info */
+    .selected-plan-box {
+      background: rgba(229, 57, 53, 0.1);
+      border: 1px solid rgba(229, 57, 53, 0.3);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+    .selected-plan-box strong { color: #e53935; font-size: 1.1rem; }
+    .selected-plan-box span { color: #aaa; font-size: 0.85rem; display: block; margin-top: 0.2rem;}
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      color: #ddd;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    
+    /* Search input for country */
+    .search-input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border-radius: 12px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #fff;
+      font-size: 0.95rem;
+      font-family: inherit;
+      outline: none;
+      margin-bottom: 0.5rem;
+    }
+    .search-input:focus { border-color: #e53935; }
+
+    .form-select {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 12px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      color: #fff;
+      font-size: 1rem;
+      font-family: inherit;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23e53935%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right 1rem top 50%;
+      background-size: 0.65rem auto;
+    }
+    .form-select:focus { border-color: #e53935; }
+
+    /* Step 2: Payment Methods */
+    .payment-methods {
+      display: flex;
+      flex-direction: column;
+      gap: 0.8rem;
+      margin-bottom: 1.5rem;
+    }
+    .payment-option {
+      display: flex;
+      align-items: center;
+      padding: 1rem;
+      background: #1a1a1a;
+      border: 1.5px solid #2a2a2a;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .payment-option:hover { border-color: #444; }
+    .payment-option.selected {
+      border-color: #e53935;
+      background: rgba(229, 57, 53, 0.05);
+    }
+    
+    /* Highlight for Recommended */
+    .payment-option.recommended {
+      border-color: #4caf50;
+      background: rgba(76, 175, 80, 0.05);
+    }
+    .payment-option.recommended.selected {
+      border-color: #4caf50;
+      background: rgba(76, 175, 80, 0.1);
+    }
+    .rec-badge {
+      position: absolute;
+      top: -10px;
+      right: 12px;
+      background: #4caf50;
+      color: white;
+      font-size: 0.6rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 0.15rem 0.6rem;
+      border-radius: 100px;
+      letter-spacing: 0.05em;
+    }
+
+    .payment-option input[type="radio"] { display: none; }
+    .payment-icon {
+      font-size: 1.5rem;
+      margin-right: 1rem;
+      width: 32px;
+      text-align: center;
+    }
+    .payment-details { flex: 1; }
+    
+    /* NEW: Category Badge */
+    .payment-category {
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #aaa;
+      display: block;
+      margin-bottom: 0.15rem;
+    }
+    
+    .payment-name { color: #fff; font-weight: 600; font-size: 0.95rem; display: block; }
+    .payment-desc { color: #888; font-size: 0.75rem; display: block; margin-top: 0.1rem; }
+    .payment-radio-custom {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .payment-option.selected .payment-radio-custom { border-color: #e53935; }
+    .payment-option.selected .payment-radio-custom::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #e53935;
+    }
+    .payment-option.recommended.selected .payment-radio-custom { border-color: #4caf50; }
+    .payment-option.recommended.selected .payment-radio-custom::after { background: #4caf50; }
+
+    /* Buttons */
+    .checkout-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+    .checkout-btn {
+      flex: 1;
+      padding: 1rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+    .checkout-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .btn-next {
+      background: #e53935;
+      color: white;
+      box-shadow: 0 4px 15px rgba(229, 57, 53, 0.3);
+    }
+    .btn-next:not(:disabled):hover { background: #c62828; transform: translateY(-2px); }
+    .btn-back {
+      background: transparent;
+      color: #aaa;
+      border: 1px solid #333;
+      flex: 0.5;
+    }
+    .btn-back:hover { background: #1a1a1a; color: #fff; }
+    
+    .btn-whatsapp {
+      background: #25D366;
+      color: white;
+      box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);
+    }
+    .btn-whatsapp:hover { background: #1eb356; transform: translateY(-2px); }
+
+    /* Summary in Step 3 */
+    .summary-box {
+      background: #1a1a1a;
+      border-radius: 12px;
+      padding: 1.2rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid #2a2a2a;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+      font-size: 0.9rem;
+    }
+    .summary-row:last-child { margin-bottom: 0; border-top: 1px solid #333; padding-top: 0.6rem; margin-top: 0.6rem; }
+    .summary-label { color: #888; }
+    .summary-value { color: #fff; font-weight: 600; text-align: right; }
+    .summary-value.highlight { color: #e53935; }
+
+    /* ---------- UTILS ---------- */
+    @media (max-width: 600px) {
+      section { padding: 3.5rem 1.2rem; }
+      header { padding: 0.75rem 1.2rem; }
+      #cta { border-radius: 20px; margin: 2rem 1.2rem; padding: 3rem 1.5rem; }
+      #features { border-radius: 20px; padding: 3rem 1.5rem; }
+      #backToTop { bottom: 1.2rem; right: 1.2rem; width: 2.8rem; height: 2.8rem; font-size: 1.2rem; }
+      .checkout-content { padding: 2rem 1.5rem; }
+      .checkout-actions { flex-direction: column; }
+      .btn-back { flex: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- OVERLAY -->
+  <div id="overlay" class="overlay"></div>
+
+  <!-- MOBILE NAV -->
+  <nav id="mobileNav" class="mobile-nav" aria-label="Mobile navigation">
+    <a href="#hero">Home</a>
+    <a href="#how-it-works">How it works</a>
+    <a href="#features">Features</a>
+    <a href="#faq">FAQ</a>
+    <a href="#contact">Contact</a>
+    <a href="#" class="subscribe-btn" id="mobileSubscribeBtn" style="text-align:center; margin-top:1rem; border-radius:8px;">Subscribe</a>
+    <div class="nav-footer">© 2025 Aviator Predictor</div>
+  </nav>
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo" onclick="window.scrollTo({top:0, behavior:'smooth'});">
+      <span class="plane-icon">✈</span>
+      AVIATOR <span>PREDICTOR</span>
+    </div>
+    <div class="desktop-nav">
+      <a href="#hero" class="active">Home</a>
+      <a href="#how-it-works">How</a>
+      <a href="#features">Features</a>
+      <a href="#faq">FAQ</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <div class="header-actions">
+      <div class="lang-selector">
+        <span>🌐</span> EN <span style="font-size:0.6rem;">▼</span>
+      </div>
+      <a href="#" class="subscribe-btn" id="headerSubscribeBtn">Subscribe</a>
+      <button class="hamburger" id="menuToggle" aria-label="Open menu" aria-expanded="false">☰</button>
+    </div>
+  </header>
+
+  <!-- ============ MAIN CONTENT (HOME PAGE) ============ -->
+  <main id="mainContent">
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-content">
+        <h1>
+          REAL-TIME <span class="highlight">SIGNALS.</span><br>
+          BET <span class="highlight">SMARTER.</span>
+        </h1>
+        <p>
+          Aviator Predictor provides real-time signals and useful game information to help users make their own decisions while they play.
+        </p>
+        <div class="hero-buttons">
+          <a href="#" class="btn btn-primary" id="heroSubscribeBtn">✈ Subscribe Now</a>
+          <a href="#how-it-works" class="btn btn-outline">▶ How It Works</a>
+        </div>
+        <div class="hero-features">
+          <div class="hero-feature"><span class="icon">⚡</span> Real-Time Signals</div>
+          <div class="hero-feature"><span class="icon">🔒</span> Secure Access</div>
+          <div class="hero-feature"><span class="icon">📱</span> Android Compatible</div>
+          <div class="hero-feature"><span class="icon">🎧</span> 24/7 Support</div>
+        </div>
+      </div>
+
+      <div class="hero-visual">
+        <div class="visual-bg"></div>
+        <div class="phone-mockup">
+          <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="phone-header">
+              <div class="dot-group"><span></span><span></span><span></span></div>
+              <div class="signal">● LIVE</div>
+            </div>
+            <div class="multiplier-grid">
+              <div class="multiplier-cell green"><div class="value">1.84x</div><div class="label">Signal</div></div>
+              <div class="multiplier-cell red"><div class="value red">1.32x</div><div class="label">Previous</div></div>
+              <div class="multiplier-cell green"><div class="value">2.15x</div><div class="label">Signal</div></div>
+              <div class="multiplier-cell red"><div class="value red">1.07x</div><div class="label">Previous</div></div>
+              <div class="multiplier-cell green"><div class="value">3.42x</div><div class="label">Signal</div></div>
+              <div class="multiplier-cell green"><div class="value">1.95x</div><div class="label">Signal</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="phone-mockup-2">
+          <div class="phone-screen">
+            <div class="phone-notch"></div>
+            <div class="phone-header">
+              <div class="dot-group"><span></span><span></span><span></span></div>
+              <div class="signal" style="color:#e53935;">● LIVE</div>
+            </div>
+            <div class="multiplier-grid">
+              <div class="multiplier-cell green"><div class="value">1.56x</div><div class="label">Signal</div></div>
+              <div class="multiplier-cell red"><div class="value red">1.12x</div><div class="label">Previous</div></div>
+              <div class="multiplier-cell green"><div class="value">2.88x</div><div class="label">Signal</div></div>
+              <div class="multiplier-cell green"><div class="value">4.01x</div><div class="label">Signal</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="play-btn" role="button" aria-label="Play video">▶</div>
+      </div>
+    </section>
+
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stats-grid">
+        <div class="stat-item"><div class="stat-value">50K+</div><div class="stat-label">Active Users</div></div>
+        <div class="stat-item"><div class="stat-value">98.2%</div><div class="stat-label">Accuracy Rate</div></div>
+        <div class="stat-item"><div class="stat-value">24/7</div><div class="stat-label">Live Signals</div></div>
+        <div class="stat-item"><div class="stat-value">4.8★</div><div class="stat-label">User Rating</div></div>
+      </div>
+    </div>
+
+    <!-- HOW IT WORKS -->
+    <section id="how-it-works">
+      <span class="section-label">Process</span>
+      <h2>How It Works</h2>
+      <p class="section-sub" style="margin-left:auto; margin-right:auto;">
+        Get started in three simple steps and start receiving real-time signals.
+      </p>
+      <div class="steps">
+        <div class="step"><h3>Subscribe</h3><p>Choose a plan and get instant access to the predictor dashboard.</p></div>
+        <div class="step"><h3>Connect</h3><p>Download the Android app and connect your account securely.</p></div>
+        <div class="step"><h3>Play Smarter</h3><p>Receive real-time signals and make informed decisions while you play.</p></div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <span class="section-label">Features</span>
+      <h2>Everything You Need</h2>
+      <p class="section-sub">Powerful tools designed to give you an edge.</p>
+      <div class="features-grid">
+        <div class="feature-item"><div class="feature-icon">⚡</div><h3>Real-Time Signals</h3><p>Get instant multiplier predictions updated live as the game progresses.</p></div>
+        <div class="feature-item"><div class="feature-icon">🔒</div><h3>Secure Access</h3><p>Your data is encrypted and protected with industry-standard security.</p></div>
+        <div class="feature-item"><div class="feature-icon">📱</div><h3>Android Compatible</h3><p>Works seamlessly on all Android devices with our lightweight app.</p></div>
+        <div class="feature-item"><div class="feature-icon">📊</div><h3>Game Analytics</h3><p>Review historical data and patterns to understand the game better.</p></div>
+        <div class="feature-item"><div class="feature-icon">🎧</div><h3>24/7 Support</h3><p>Our team is always available to help you with any questions.</p></div>
+        <div class="feature-item"><div class="feature-icon">🔄</div><h3>Regular Updates</h3><p>We continuously improve our algorithms and add new features.</p></div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section id="cta">
+      <h2>Ready to Bet Smarter?</h2>
+      <p>Join thousands of users already using Aviator Predictor to make informed decisions.</p>
+      <a href="#" class="btn btn-primary" id="ctaSubscribeBtn">✈ Subscribe Now</a>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <span class="section-label">Support</span>
+      <h2>Frequently Asked Questions</h2>
+      <p class="section-sub" style="margin-left:auto; margin-right:auto;">Can't find what you're looking for? Reach out to our team.</p>
+      <div class="faq-list">
+        <div class="faq-item"><h4>What is Aviator Predictor?</h4><p>Aviator Predictor is a tool that provides real-time signals and game information to help users make their own decisions while playing.</p></div>
+        <div class="faq-item"><h4>How much does a subscription cost?</h4><p>We offer flexible plans: $11 for 1 month, $20 for 2 months, and $28 for 3 months. The longer the plan, the more you save.</p></div>
+        <div class="faq-item"><h4>Which devices are supported?</h4><p>Our app is compatible with all Android devices. iOS support is coming soon.</p></div>
+        <div class="faq-item"><h4>How accurate are the signals?</h4><p>Our algorithms maintain a 98.2% accuracy rate based on historical data. However, all games involve risk — always play responsibly.</p></div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <span class="section-label">Contact</span>
+      <h2>Get in Touch</h2>
+      <p class="section-sub" style="margin-left:auto; margin-right:auto;">We'd love to hear from you. We typically respond within a few hours.</p>
+      <form class="contact-form" onsubmit="event.preventDefault(); alert('Thanks! This is a demo form.');">
+        <input type="text" placeholder="Your name" required>
+        <input type="email" placeholder="Email address" required>
+        <textarea placeholder="How can we help?" required></textarea>
+        <button type="submit" class="btn btn-primary" style="align-self:center; min-width:180px;">Send Message</button>
+      </form>
+    </section>
+  </main>
+
+  <!-- ============ SUBSCRIPTION PLANS SECTION ============ -->
+  <section id="subscription">
+    <div class="subscription-header">
+      <a href="#" class="back-home-link" id="backHomeLink">← Back to Home</a>
+      <span class="section-label">Choose Your Plan</span>
+      <h2>Unlock Real-Time Signals</h2>
+      <p class="section-sub">
+        Simple pricing. Cancel anytime. Start receiving real-time signals in minutes.
+      </p>
+    </div>
+
+    <div class="plans-grid">
+      <!-- Plan 1: $11 / 1 Month -->
+      <div class="plan-card">
+        <div class="plan-name">1 Month</div>
+        <div class="plan-price">
+          <span class="currency">$</span>11
+          <span class="period">/mo</span>
+        </div>
+        <div class="plan-duration">Billed monthly</div>
+        <span class="plan-savings invisible">Save $0</span>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Real-time signals</li>
+          <li>Basic analytics</li>
+          <li>Android app access</li>
+          <li>Email support</li>
+          <li>1 device</li>
+        </ul>
+        <button class="plan-btn outline" data-plan="1 Month – $11" data-price="11" data-duration="1 month">Subscribe — $11</button>
+        <div class="plan-note">Perfect for trying it out</div>
+      </div>
+
+      <!-- Plan 2: $20 / 2 Months (Featured) -->
+      <div class="plan-card featured">
+        <div class="plan-badge">Most Popular · Save $2</div>
+        <div class="plan-name">2 Months</div>
+        <div class="plan-price">
+          <span class="currency">$</span>20
+          <span class="period">/2mo</span>
+        </div>
+        <div class="plan-duration">Just $10 / month</div>
+        <span class="plan-savings">Save $2 vs monthly</span>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Everything in 1 Month</li>
+          <li>Advanced analytics</li>
+          <li>Priority support</li>
+          <li>2 devices</li>
+          <li>Signal history</li>
+        </ul>
+        <button class="plan-btn primary" data-plan="2 Months – $20" data-price="20" data-duration="2 months">Subscribe — $20</button>
+        <div class="plan-note">Best value for committed players</div>
+      </div>
+
+      <!-- Plan 3: $28 / 3 Months -->
+      <div class="plan-card">
+        <div class="plan-name">3 Months</div>
+        <div class="plan-price">
+          <span class="currency">$</span>28
+          <span class="period">/3mo</span>
+        </div>
+        <div class="plan-duration">Just $9.33 / month</div>
+        <span class="plan-savings">Save $5 vs monthly</span>
+        <div class="plan-divider"></div>
+        <ul class="plan-features">
+          <li>Everything in 2 Months</li>
+          <li>VIP signal channel</li>
+          <li>24/7 priority support</li>
+          <li>3 devices</li>
+          <li>Early access to new features</li>
+        </ul>
+        <button class="plan-btn outline" data-plan="3 Months – $28" data-price="28" data-duration="3 months">Subscribe — $28</button>
+        <div class="plan-note">Maximum savings, maximum value</div>
+      </div>
+    </div>
+
+    <div class="subscription-footer">
+      <div class="trust-item"><span class="icon">🔒</span> Secure checkout</div>
+      <div class="trust-item"><span class="icon">↩</span> Cancel anytime</div>
+      <div class="trust-item"><span class="icon">🎧</span> 24/7 support</div>
+      <div class="trust-item"><span class="icon">✈</span> Instant activation</div>
+    </div>
+  </section>
+
+  <!-- ============ MULTI-STEP CHECKOUT MODAL ============ -->
+  <div class="checkout-modal" id="checkoutModal">
+    <div class="checkout-content">
+      <button class="checkout-close" id="checkoutClose" aria-label="Close">✕</button>
+      
+      <!-- Progress Bar -->
+      <div class="checkout-progress">
+        <div class="progress-step active" id="prog1">1</div>
+        <div class="progress-line" id="line1"></div>
+        <div class="progress-step" id="prog2">2</div>
+        <div class="progress-line" id="line2"></div>
+        <div class="progress-step" id="prog3">3</div>
+      </div>
+
+      <!-- STEP 1: Country -->
+      <div class="checkout-step active" id="step1">
+        <h3>Select Your Country</h3>
+        <p>We need your location to show the correct payment methods.</p>
+        
+        <div class="selected-plan-box">
+          <strong id="displayPlanName">1 Month – $11</strong>
+          <span>Selected Plan</span>
+        </div>
+
+        <div class="form-group">
+          <label for="countrySelect">Search & Select Country</label>
+          <input type="text" class="search-input" id="countrySearch" placeholder="Type to search country...">
+          <select class="form-select" id="countrySelect" required size="1">
+            <option value="" disabled selected>-- Select your country --</option>
+            <!-- Populated via JS -->
+          </select>
+        </div>
+
+        <div class="checkout-actions">
+          <button class="checkout-btn btn-next" id="btnToStep2" disabled>Continue to Payment</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Payment Method -->
+      <div class="checkout-step" id="step2">
+        <h3>Payment Method</h3>
+        <p>Choose how you want to complete your payment.</p>
+
+        <div class="payment-methods" id="paymentMethodsContainer">
+          <!-- Dynamically populated via JavaScript based on country -->
+        </div>
+
+        <div class="checkout-actions">
+          <button class="checkout-btn btn-back" id="btnBackToStep1">Back</button>
+          <button class="checkout-btn btn-next" id="btnToStep3" disabled>Review Order</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: Confirm & WhatsApp -->
+      <div class="checkout-step" id="step3">
+        <h3>Confirm Your Order</h3>
+        <p>Review your details below. Click the button to complete payment on WhatsApp.</p>
+
+        <div class="summary-box">
+          <div class="summary-row">
+            <span class="summary-label">Plan</span>
+            <span class="summary-value" id="summaryPlan">1 Month – $11</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Country</span>
+            <span class="summary-value" id="summaryCountry">Kenya</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Payment Method</span>
+            <span class="summary-value" id="summaryPayment">M-Pesa</span>
+          </div>
+          <div class="summary-row">
+            <span class="summary-label">Total</span>
+            <span class="summary-value highlight" id="summaryTotal">$11</span>
+          </div>
+        </div>
+
+        <div class="checkout-actions" style="flex-direction: column;">
+          <a href="#" class="checkout-btn btn-whatsapp" id="waCheckoutBtn" target="_blank" rel="noopener">
+            💬 Complete on WhatsApp
+          </a>
+          <button class="checkout-btn btn-back" id="btnBackToStep2" style="flex: 1; width: 100%;">Back</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-links">
+      <a href="#hero" onclick="showHome(event)">Home</a>
+      <a href="#how-it-works" onclick="showHome(event)">How</a>
+      <a href="#features" onclick="showHome(event)">Features</a>
+      <a href="#" id="footerSubscribeLink">Pricing</a>
+      <a href="#faq" onclick="showHome(event)">FAQ</a>
+      <a href="#contact" onclick="showHome(event)">Contact</a>
+    </div>
+    <p>© 2025 Aviator Predictor — All rights reserved.</p>
+  </footer>
+
+  <!-- BACK TO TOP -->
+  <button id="backToTop" aria-label="Back to top">↑</button>
+
+  <script>
+    (function() {
+      // ============================================
+      // CONFIGURATION
+      // ============================================
+      // Updated WhatsApp number
+      const WHATSAPP_NUMBER = '447848449121';
+
+      // Comprehensive list of countries for the dropdown
+      const COUNTRIES = [
+        "Afghanistan", "Albania", "Algeria", "Andorra", "Angola", "Antigua and Barbuda", "Argentina", "Armenia", "Australia", "Austria", "Azerbaijan",
+        "Bahamas", "Bahrain", "Bangladesh", "Barbados", "Belarus", "Belgium", "Belize", "Benin", "Bhutan", "Bolivia", "Bosnia and Herzegovina", "Botswana", "Brazil", "Brunei", "Bulgaria", "Burkina Faso", "Burundi",
+        "Cabo Verde", "Cambodia", "Cameroon", "Canada", "Central African Republic", "Chad", "Chile", "China", "Colombia", "Comoros", "Congo (Congo-Brazzaville)", "Costa Rica", "Croatia", "Cuba", "Cyprus", "Czechia (Czech Republic)",
+        "Democratic Republic of the Congo", "Denmark", "Djibouti", "Dominica", "Dominican Republic",
+        "Ecuador", "Egypt", "El Salvador", "Equatorial Guinea", "Eritrea", "Estonia", "Eswatini", "Ethiopia",
+        "Fiji", "Finland", "France",
+        "Gabon", "Gambia", "Georgia", "Germany", "Ghana", "Greece", "Grenada", "Guatemala", "Guinea", "Guinea-Bissau", "Guyana",
+        "Haiti", "Honduras", "Hungary",
+        "Iceland", "India", "Indonesia", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Ivory Coast",
+        "Jamaica", "Japan", "Jordan",
+        "Kazakhstan", "Kenya", "Kiribati", "Kuwait", "Kyrgyzstan",
+        "Laos", "Latvia", "Lebanon", "Lesotho", "Liberia", "Libya", "Liechtenstein", "Lithuania", "Luxembourg",
+        "Madagascar", "Malawi", "Malaysia", "Maldives", "Mali", "Malta", "Marshall Islands", "Mauritania", "Mauritius", "Mexico", "Micronesia", "Moldova", "Monaco", "Mongolia", "Montenegro", "Morocco", "Mozambique", "Myanmar",
+        "Namibia", "Nauru", "Nepal", "Netherlands", "New Zealand", "Nicaragua", "Niger", "Nigeria", "North Korea", "North Macedonia", "Norway",
+        "Oman",
+        "Pakistan", "Palau", "Palestine", "Panama", "Papua New Guinea", "Paraguay", "Peru", "Philippines", "Poland", "Portugal",
+        "Qatar",
+        "Romania", "Russia", "Rwanda",
+        "Saint Kitts and Nevis", "Saint Lucia", "Saint Vincent and the Grenadines", "Samoa", "San Marino", "Sao Tome and Principe", "Saudi Arabia", "Senegal", "Serbia", "Seychelles", "Sierra Leone", "Singapore", "Slovakia", "Slovenia", "Solomon Islands", "Somalia", "South Africa", "South Korea", "South Sudan", "Spain", "Sri Lanka", "Sudan", "Suriname", "Sweden", "Switzerland", "Syria",
+        "Taiwan", "Tajikistan", "Tanzania", "Thailand", "Timor-Leste", "Togo", "Tonga", "Trinidad and Tobago", "Tunisia", "Turkey", "Turkmenistan", "Tuvalu",
+        "Uganda", "Ukraine", "United Arab Emirates", "United Kingdom", "United States", "Uruguay", "Uzbekistan",
+        "Vanuatu", "Vatican City", "Venezuela", "Vietnam",
+        "Yemen",
+        "Zambia", "Zimbabwe", "Other"
+      ];
+
+      // Smart Payment Method Configuration based on Country
+      // Note the new 'category' field which explicitly labels the type
+      const PAYMENT_METHODS = {
+        'kenya': [
+          { id: 'mpesa', icon: '📱', category: 'Mobile Money', name: 'M-Pesa', desc: 'Safaricom Mobile Money', recommended: true },
+          { id: 'airtel', icon: '📱', category: 'Mobile Money', name: 'Airtel Money', desc: 'Airtel Mobile Money' },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'Equity, KCB, Co-op' },
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard' }
+        ],
+        'uganda': [
+          { id: 'mtn', icon: '📱', category: 'Mobile Money', name: 'MTN MoMo', desc: 'MTN Mobile Money', recommended: true },
+          { id: 'airtel', icon: '📱', category: 'Mobile Money', name: 'Airtel Money', desc: 'Airtel Mobile Money' },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'Stanbic, Centenary' },
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard' }
+        ],
+        'nigeria': [
+          { id: 'opay', icon: '📱', category: 'Mobile Money', name: 'OPay / PalmPay', desc: 'Mobile Money', recommended: true },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'GTBank, Access, Zenith' },
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard' }
+        ],
+        'south africa': [
+          { id: 'cashsend', icon: '💸', category: 'Cash/Voucher', name: 'Cash Send & 1 Voucher', desc: 'Recommended - Fast & Easy', recommended: true },
+          { id: 'eft', icon: '🏦', category: 'Bank Transfer', name: 'Instant EFT', desc: 'Bank Transfer (FNB, Capitec, Absa)' },
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard' }
+        ],
+        'ghana': [
+          { id: 'momo', icon: '📱', category: 'Mobile Money', name: 'MTN MoMo / Vodafone', desc: 'Mobile Money', recommended: true },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'GCB, Ecobank' },
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard' }
+        ],
+        'senegal': [
+          { id: 'orange', icon: '📱', category: 'Mobile Money', name: 'Orange Money', desc: 'Orange Mobile Money', recommended: true },
+          { id: 'wave', icon: '📱', category: 'Mobile Money', name: 'Wave', desc: 'Mobile Money' },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'Ecobank, BICIS' }
+        ],
+        'ivory coast': [
+          { id: 'orange', icon: '📱', category: 'Mobile Money', name: 'Orange Money', desc: 'Orange Mobile Money', recommended: true },
+          { id: 'mtn', icon: '📱', category: 'Mobile Money', name: 'MTN MoMo', desc: 'MTN Mobile Money' },
+          { id: 'moov', icon: '📱', category: 'Mobile Money', name: 'Moov Money', desc: 'Moov Mobile Money' }
+        ],
+        'mali': [
+          { id: 'orange', icon: '📱', category: 'Mobile Money', name: 'Orange Money', desc: 'Orange Mobile Money', recommended: true },
+          { id: 'moov', icon: '📱', category: 'Mobile Money', name: 'Moov Money', desc: 'Moov Mobile Money' }
+        ],
+        'united states': [
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard, Amex', recommended: true },
+          { id: 'wire', icon: '🏦', category: 'Bank Transfer', name: 'Wire Transfer', desc: 'Domestic Bank Transfer' },
+          { id: 'zelle', icon: '⚡', category: 'Bank Transfer', name: 'Zelle', desc: 'Fast bank transfer' }
+        ],
+        'united kingdom': [
+          { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard', recommended: true },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'Faster Payments' }
+        ],
+        'tanzania': [
+          { id: 'mpesa', icon: '📱', category: 'Mobile Money', name: 'M-Pesa / Tigo Pesa', desc: 'Mobile Money', recommended: true },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'CRDB, NMB' }
+        ],
+        'rwanda': [
+          { id: 'momo', icon: '📱', category: 'Mobile Money', name: 'MTN MoMo / Airtel', desc: 'Mobile Money', recommended: true },
+          { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'Bank Transfer', desc: 'Bank of Kigali' }
+        ]
+      };
+
+      // Default fallback for any country not explicitly listed above
+      const DEFAULT_PAYMENT_METHODS = [
+        { id: 'card', icon: '💳', category: 'Card Payment', name: 'Credit/Debit Card', desc: 'Visa, Mastercard, Amex', recommended: true },
+        { id: 'bank', icon: '🏦', category: 'Bank Transfer', name: 'International Bank Transfer', desc: 'SWIFT / Wire Transfer' },
+        { id: 'crypto', icon: '🪙', category: 'Crypto Wallet', name: 'Crypto (USDT/BTC)', desc: 'Binance, Trust Wallet' }
+      ];
+
+      // ============================================
+      // DOM ELEMENTS
+      // ============================================
+      const overlay = document.getElementById('overlay');
+      const mobileNav = document.getElementById('mobileNav');
+      const menuToggle = document.getElementById('menuToggle');
+      const backToTop = document.getElementById('backToTop');
+      const mainContent = document.getElementById('mainContent');
+      const subscriptionSection = document.getElementById('subscription');
+      
+      // Checkout Modal Elements
+      const checkoutModal = document.getElementById('checkoutModal');
+      const checkoutClose = document.getElementById('checkoutClose');
+      const step1 = document.getElementById('step1');
+      const step2 = document.getElementById('step2');
+      const step3 = document.getElementById('step3');
+      
+      const prog1 = document.getElementById('prog1');
+      const prog2 = document.getElementById('prog2');
+      const prog3 = document.getElementById('prog3');
+      const line1 = document.getElementById('line1');
+      const line2 = document.getElementById('line2');
+
+      const displayPlanName = document.getElementById('displayPlanName');
+      const countrySelect = document.getElementById('countrySelect');
+      const countrySearch = document.getElementById('countrySearch');
+      const btnToStep2 = document.getElementById('btnToStep2');
+      
+      const paymentMethodsContainer = document.getElementById('paymentMethodsContainer');
+      const btnBackToStep1 = document.getElementById('btnBackToStep1');
+      const btnToStep3 = document.getElementById('btnToStep3');
+      
+      const summaryPlan = document.getElementById('summaryPlan');
+      const summaryCountry = document.getElementById('summaryCountry');
+      const summaryPayment = document.getElementById('summaryPayment');
+      const summaryTotal = document.getElementById('summaryTotal');
+      const waCheckoutBtn = document.getElementById('waCheckoutBtn');
+      const btnBackToStep2 = document.getElementById('btnBackToStep2');
+
+      // State variables
+      let currentPlan = { name: '', price: '', duration: '' };
+      let selectedCountry = '';
+      let selectedCountryName = '';
+      let selectedPayment = null;
+
+      // ============================================
+      // POPULATE COUNTRIES DROPDOWN
+      // ============================================
+      COUNTRIES.forEach(country => {
+        const option = document.createElement('option');
+        option.value = country.toLowerCase();
+        option.textContent = country;
+        countrySelect.appendChild(option);
+      });
+
+      // Search filter logic
+      countrySearch.addEventListener('input', function() {
+        const filter = this.value.toLowerCase();
+        const options = countrySelect.options;
+        
+        for (let i = 0; i < options.length; i++) {
+          const txtValue = options[i].text.toLowerCase();
+          // Skip the placeholder
+          if (options[i].value === "") continue; 
+          
+          if (txtValue.indexOf(filter) > -1) {
+            options[i].style.display = "";
+          } else {
+            options[i].style.display = "none";
+          }
+        }
+      });
+
+      // ============================================
+      // UI TOGGLES
+      // ============================================
+      function openMobileNav() {
+        mobileNav.classList.add('open');
+        overlay.classList.add('active');
+        menuToggle.setAttribute('aria-expanded', 'true');
+        menuToggle.innerHTML = '✕';
+        document.body.style.overflow = 'hidden';
+      }
+      function closeMobileNav() {
+        mobileNav.classList.remove('open');
+        overlay.classList.remove('active');
+        menuToggle.setAttribute('aria-expanded', 'false');
+        menuToggle.innerHTML = '☰';
+        if (!checkoutModal.classList.contains('active')) {
+          document.body.style.overflow = '';
+        }
+      }
+      menuToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        mobileNav.classList.contains('open') ? closeMobileNav() : openMobileNav();
+      });
+      overlay.addEventListener('click', closeMobileNav);
+      mobileNav.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => closeMobileNav());
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && mobileNav.classList.contains('open')) closeMobileNav();
+      });
+
+      // ============================================
+      // BACK TO TOP
+      // ============================================
+      function handleBackToTopVisibility() {
+        if (window.scrollY > 500) backToTop.classList.add('visible');
+        else backToTop.classList.remove('visible');
+      }
+      let ticking = false;
+      window.addEventListener('scroll', () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            handleBackToTopVisibility();
+            ticking = false;
+          });
+          ticking = true;
+        }
+      });
+      backToTop.addEventListener('click', () => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+      handleBackToTopVisibility();
+
+      // ============================================
+      // SUBSCRIPTION PAGE LOGIC
+      // ============================================
+      function showSubscription(e) {
+        if (e) e.preventDefault();
+        mainContent.style.display = 'none';
+        subscriptionSection.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        history.replaceState(null, '', '#subscription');
+        if (mobileNav.classList.contains('open')) closeMobileNav();
+      }
+
+      function showHome(e) {
+        if (e) e.preventDefault();
+        subscriptionSection.classList.remove('active');
+        mainContent.style.display = '';
+        history.replaceState(null, '', '#hero');
+        if (mobileNav.classList.contains('open')) closeMobileNav();
+      }
+
+      document.getElementById('headerSubscribeBtn').addEventListener('click', showSubscription);
+      document.getElementById('heroSubscribeBtn').addEventListener('click', showSubscription);
+      document.getElementById('ctaSubscribeBtn').addEventListener('click', showSubscription);
+      document.getElementById('mobileSubscribeBtn').addEventListener('click', showSubscription);
+      document.getElementById('footerSubscribeLink').addEventListener('click', showSubscription);
+      document.getElementById('backHomeLink').addEventListener('click', showHome);
+
+      // ============================================
+      // MULTI-STEP CHECKOUT LOGIC
+      // ============================================
+      
+      // Function to show a specific step
+      function showStep(stepNumber) {
+        // Hide all steps
+        step1.classList.remove('active');
+        step2.classList.remove('active');
+        step3.classList.remove('active');
+        
+        // Reset progress states
+        prog1.className = 'progress-step';
+        prog2.className = 'progress-step';
+        prog3.className = 'progress-step';
+        line1.className = 'progress-line';
+        line2.className = 'progress-line';
+
+        if (stepNumber === 1) {
+          step1.classList.add('active');
+          prog1.classList.add('active');
+        } else if (stepNumber === 2) {
+          step2.classList.add('active');
+          prog1.classList.add('completed');
+          line1.classList.add('active');
+          prog2.classList.add('active');
+        } else if (stepNumber === 3) {
+          step3.classList.add('active');
+          prog1.classList.add('completed');
+          line1.classList.add('active');
+          prog2.classList.add('completed');
+          line2.classList.add('active');
+          prog3.classList.add('active');
+          
+          // Update summary box
+          summaryPlan.textContent = currentPlan.name;
+          summaryCountry.textContent = selectedCountryName;
+          summaryPayment.textContent = selectedPayment ? selectedPayment.name : '';
+          summaryTotal.textContent = '$' + currentPlan.price;
+        }
+      }
+
+      // Open modal when a plan is clicked
+      document.querySelectorAll('.plan-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          
+          // Store selected plan details
+          currentPlan = {
+            name: this.getAttribute('data-plan'),
+            price: this.getAttribute('data-price'),
+            duration: this.getAttribute('data-duration')
+          };
+
+          // Reset state
+          selectedCountry = '';
+          selectedCountryName = '';
+          selectedPayment = null;
+          countrySelect.value = '';
+          countrySearch.value = '';
+          
+          // Reset search filter visibility
+          const options = countrySelect.options;
+          for (let i = 0; i < options.length; i++) {
+             options[i].style.display = "";
+          }
+
+          btnToStep2.disabled = true;
+          btnToStep3.disabled = true;
+          
+          // Update UI
+          displayPlanName.textContent = currentPlan.name;
+          
+          // Show step 1 and open modal
+          showStep(1);
+          checkoutModal.classList.add('active');
+          document.body.style.overflow = 'hidden';
+        });
+      });
+
+      // Close Modal
+      function closeCheckoutModal() {
+        checkoutModal.classList.remove('active');
+        if (!mobileNav.classList.contains('open')) {
+          document.body.style.overflow = '';
+        }
+      }
+      checkoutClose.addEventListener('click', closeCheckoutModal);
+      checkoutModal.addEventListener('click', (e) => {
+        if (e.target === checkoutModal) closeCheckoutModal();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && checkoutModal.classList.contains('active')) {
+          closeCheckoutModal();
+        }
+      });
+
+      // STEP 1: Country Selection
+      countrySelect.addEventListener('change', function() {
+        selectedCountry = this.value;
+        selectedCountryName = this.options[this.selectedIndex].text;
+        
+        if (selectedCountry) {
+          btnToStep2.disabled = false;
+        } else {
+          btnToStep2.disabled = true;
+        }
+      });
+
+      btnToStep2.addEventListener('click', () => {
+        if (!selectedCountry) return;
+        
+        // Populate payment methods
+        paymentMethodsContainer.innerHTML = '';
+        
+        // Determine which payment methods to show
+        let methods = PAYMENT_METHODS[selectedCountry];
+        
+        // Fallback if country is not explicitly mapped
+        if (!methods) {
+          methods = DEFAULT_PAYMENT_METHODS;
+        }
+        
+        methods.forEach((method, index) => {
+          const label = document.createElement('label');
+          // Add recommended class if applicable
+          label.className = `payment-option ${method.recommended ? 'recommended' : ''}`;
+          
+          label.innerHTML = `
+            <input type="radio" name="paymentMethod" value="${method.id}">
+            <div class="payment-icon">${method.icon}</div>
+            <div class="payment-details">
+              <span class="payment-category">${method.category}</span>
+              <span class="payment-name">${method.name}</span>
+              <span class="payment-desc">${method.desc}</span>
+            </div>
+            <div class="payment-radio-custom"></div>
+            ${method.recommended ? '<span class="rec-badge">Recommended</span>' : ''}
+          `;
+          
+          // Handle selection
+          label.addEventListener('click', () => {
+            // Remove selected class from all
+            document.querySelectorAll('.payment-option').forEach(opt => opt.classList.remove('selected'));
+            // Add to clicked
+            label.classList.add('selected');
+            // Set state
+            selectedPayment = method;
+            btnToStep3.disabled = false;
+          });
+          
+          paymentMethodsContainer.appendChild(label);
+        });
+        
+        // Reset selected payment
+        selectedPayment = null;
+        btnToStep3.disabled = true;
+
+        showStep(2);
+      });
+
+      // STEP 2: Payment Method
+      btnBackToStep1.addEventListener('click', () => {
+        showStep(1);
+      });
+
+      btnToStep3.addEventListener('click', () => {
+        if (!selectedPayment) return;
+        showStep(3);
+      });
+
+      // STEP 3: Confirmation & WhatsApp Redirect
+      btnBackToStep2.addEventListener('click', () => {
+        showStep(2);
+      });
+
+      waCheckoutBtn.addEventListener('click', function(e) {
+        // Build the WhatsApp message
+        const message = 
+          `Hello Aviator Predictor Support! 👋\n\n` +
+          `I would like to complete my subscription. Here are my details:\n\n` +
+          `📦 Plan: ${currentPlan.name}\n` +
+          `💰 Price: $${currentPlan.price}\n` +
+          `⏱ Duration: ${currentPlan.duration}\n\n` +
+          `🌍 Country: ${selectedCountryName}\n` +
+          `💳 Category: ${selectedPayment.category}\n` +
+          `🏦 Method: ${selectedPayment.name} (${selectedPayment.desc})\n\n` +
+          `Please send me the payment details so I can complete my order. Thank you!`;
+
+        const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+        this.setAttribute('href', waUrl);
+        
+        // Auto close modal after a short delay
+        setTimeout(closeCheckoutModal, 800);
+      });
+
+      // ============================================
+      // ACTIVE NAV HIGHLIGHT
+      // ============================================
+      const sections = document.querySelectorAll('main section[id]');
+      const navLinks = document.querySelectorAll('.desktop-nav a');
+      window.addEventListener('scroll', () => {
+        if (subscriptionSection.classList.contains('active')) return;
+        let current = '';
+        sections.forEach(section => {
+          const sectionTop = section.offsetTop - 100;
+          if (window.scrollY >= sectionTop) current = section.getAttribute('id');
+        });
+        navLinks.forEach(link => {
+          link.classList.remove('active');
+          if (link.getAttribute('href') === '#' + current) link.classList.add('active');
+        });
+      });
+
+      // Handle initial hash
+      if (window.location.hash === '#subscription') {
+        showSubscription();
+      }
+    })();
+  </script>
+</body>
+</html>
