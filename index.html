@@ -112,16 +112,16 @@
     }
     .lang-selector:hover { background: #1a1a1a; }
 
-    .download-btn-header {
+    .subscribe-btn {
       background: #e53935; color: white;
-      border: none; padding: 0.6rem 1.2rem;
-      border-radius: 8px; font-weight: 800;
+      border: none; padding: 0.6rem 1.4rem;
+      border-radius: 8px; font-weight: 700;
       font-size: 0.8rem; text-transform: uppercase;
       letter-spacing: 0.05em; cursor: pointer;
       transition: background 0.2s, transform 0.15s;
-      text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem;
+      text-decoration: none; display: inline-block;
     }
-    .download-btn-header:hover { background: #c62828; transform: translateY(-1px); }
+    .subscribe-btn:hover { background: #c62828; transform: translateY(-1px); }
 
     .hamburger {
       display: none; background: none; border: none;
@@ -134,7 +134,7 @@
     @media (max-width: 900px) {
       .desktop-nav { display: none; }
       .hamburger { display: block; }
-      .header-actions .download-btn-header { display: none; }
+      .header-actions .subscribe-btn { display: none; }
     }
 
     /* ---------- HERO ---------- */
@@ -164,8 +164,8 @@
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
       gap: 0.5rem; padding: 0.9rem 1.8rem;
-      border-radius: 8px; font-weight: 800;
-      font-size: 0.95rem; text-transform: uppercase;
+      border-radius: 8px; font-weight: 700;
+      font-size: 0.85rem; text-transform: uppercase;
       letter-spacing: 0.06em; text-decoration: none;
       transition: all 0.2s ease; border: 1.5px solid transparent;
       cursor: pointer; white-space: nowrap;
@@ -321,7 +321,7 @@
     @media (max-width: 500px) {
       .hero-content h1 { font-size: 1.9rem; }
       .hero-content p { font-size: 0.95rem; }
-      .btn { padding: 0.8rem 1.4rem; font-size: 0.85rem; }
+      .btn { padding: 0.8rem 1.4rem; font-size: 0.78rem; }
       .hero-visual { min-height: 360px; }
       .phone-mockup { width: 160px; height: 320px; }
       .phone-mockup-2 {
@@ -515,6 +515,280 @@
     #backToTop:active { transform: translateY(0); }
 
     /* ============================================
+       SUBSCRIPTION PLANS
+       ============================================ */
+    #subscription {
+      background: #0a0a0a;
+      padding: 5rem 1.8rem 6rem;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      text-align: center;
+      display: none;
+    }
+    #subscription.active {
+      display: block;
+      animation: fadeInUp 0.5s ease;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    #subscription .subscription-header { margin-bottom: 3.5rem; }
+    #subscription .subscription-header .section-label {
+      background: rgba(229, 57, 53, 0.15);
+      color: #e53935;
+    }
+    #subscription h2 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: #fff;
+      margin-bottom: 0.8rem;
+    }
+    #subscription .section-sub {
+      margin-left: auto; margin-right: auto;
+      text-align: center; color: #999; font-size: 1.1rem;
+    }
+
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 2rem;
+      max-width: 1100px;
+      margin: 0 auto;
+      align-items: stretch;
+    }
+
+    .plan-card {
+      background: #111;
+      border: 1px solid #1f1f1f;
+      border-radius: 24px;
+      padding: 2.5rem 2rem 2rem;
+      display: flex;
+      flex-direction: column;
+      text-align: center;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+    }
+    .plan-card:hover {
+      transform: translateY(-8px);
+      border-color: #333;
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.7);
+    }
+
+    .plan-card.featured {
+      background: linear-gradient(180deg, #1a0808 0%, #111 100%);
+      border: 2px solid #e53935;
+      box-shadow: 0 20px 50px -15px rgba(229, 57, 53, 0.35);
+      transform: scale(1.03);
+    }
+    .plan-card.featured:hover {
+      transform: scale(1.03) translateY(-8px);
+      border-color: #f44336;
+      box-shadow: 0 30px 70px -15px rgba(229, 57, 53, 0.5);
+    }
+
+    .plan-badge {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #e53935;
+      color: white;
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      padding: 0.4rem 1.2rem;
+      border-radius: 100px;
+      white-space: nowrap;
+      box-shadow: 0 4px 15px rgba(229, 57, 53, 0.5);
+    }
+    .plan-card.featured .plan-badge::before { content: '★ '; }
+
+    .plan-name {
+      font-size: 0.8rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.15em;
+      color: #e53935;
+      margin-bottom: 1rem;
+    }
+    .plan-card:not(.featured) .plan-name { color: #777; }
+
+    .plan-price {
+      font-size: 3.5rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: #fff;
+      line-height: 1;
+      margin-bottom: 0.4rem;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 0.15rem;
+    }
+    .plan-price .currency {
+      font-size: 1.6rem;
+      font-weight: 700;
+      margin-top: 0.6rem;
+      color: #e53935;
+    }
+    .plan-price .period {
+      font-size: 1rem;
+      font-weight: 500;
+      color: #777;
+      align-self: flex-end;
+      margin-bottom: 0.4rem;
+    }
+
+    .plan-duration {
+      font-size: 0.95rem;
+      color: #aaa;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .plan-savings {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #4caf50;
+      background: rgba(76, 175, 80, 0.12);
+      padding: 0.2rem 0.7rem;
+      border-radius: 100px;
+      margin-bottom: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .plan-savings.invisible { visibility: hidden; }
+
+    .plan-divider {
+      height: 1px;
+      background: #1f1f1f;
+      margin: 0 0 1.8rem;
+    }
+
+    .plan-features {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.9rem;
+      text-align: left;
+      margin-bottom: 2rem;
+      flex: 1;
+    }
+    .plan-features li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      color: #bbb;
+      font-size: 0.9rem;
+      line-height: 1.4;
+    }
+    .plan-features li::before {
+      content: '✓';
+      color: #e53935;
+      font-weight: 800;
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 0.1rem;
+    }
+    .plan-card.featured .plan-features li::before { color: #4caf50; }
+
+    .plan-btn {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: all 0.2s ease;
+      border: 1.5px solid transparent;
+      font-family: inherit;
+    }
+    .plan-btn.primary {
+      background: #e53935;
+      color: white;
+      border-color: #e53935;
+      box-shadow: 0 8px 25px -6px rgba(229, 57, 53, 0.5);
+    }
+    .plan-btn.primary:hover {
+      background: #c62828;
+      border-color: #c62828;
+      transform: translateY(-2px);
+      box-shadow: 0 14px 30px -8px rgba(229, 57, 53, 0.6);
+    }
+    .plan-btn.outline {
+      background: transparent;
+      color: #fff;
+      border-color: #333;
+    }
+    .plan-btn.outline:hover {
+      background: #1a1a1a;
+      border-color: #666;
+      transform: translateY(-2px);
+    }
+
+    .plan-note {
+      margin-top: 1rem;
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .subscription-footer {
+      margin-top: 4rem;
+      padding-top: 2.5rem;
+      border-top: 1px solid #1a1a1a;
+      display: flex;
+      justify-content: center;
+      gap: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .subscription-footer .trust-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #777;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+    .subscription-footer .trust-item .icon {
+      color: #e53935;
+      font-size: 1.1rem;
+    }
+
+    .back-home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: #888;
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 2rem;
+      transition: color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .back-home-link:hover { color: #e53935; }
+
+    @media (max-width: 700px) {
+      .plan-card.featured { transform: scale(1); }
+      .plan-card.featured:hover { transform: translateY(-8px); }
+      .plan-price { font-size: 3rem; }
+      #subscription { padding: 3.5rem 1.2rem 4rem; }
+    }
+
+    /* ============================================
        MULTI-STEP CHECKOUT MODAL (For Access Keys)
        ============================================ */
     .checkout-modal {
@@ -593,9 +867,7 @@
     <a href="#faq">FAQ</a>
     <a href="#contact">Contact</a>
     <!-- Changed mobile button to Download -->
-    <a href="https://aviator-predictor-1w1r.onrender.com/aviator.apk" class="download-btn-header blinking-btn" style="justify-content:center; margin-top:1rem;">⬇ DOWNLOAD APP</a>
-    <!-- Kept a small link for subscribing to get keys -->
-    <a href="#" id="mobileSubscribeBtn" style="font-size:0.8rem; color:#888; text-align:center; margin-top:1rem;">Need an Access Key? Subscribe</a>
+    <a href="#" class="subscribe-btn blinking-btn" id="mobileSubscribeBtn" style="text-align:center; margin-top:1rem; border-radius:8px; display:flex; justify-content:center; align-items:center; gap:0.5rem; width:100%;">⬇ DOWNLOAD PREDICTOR</a>
     <div class="nav-footer">© 2025 Aviator Predictor</div>
   </nav>
 
@@ -617,7 +889,7 @@
         <span>🌐</span> EN <span style="font-size:0.6rem;">▼</span>
       </div>
       <!-- Main Header Button: DOWNLOAD -->
-      <a href="https://aviator-predictor-1w1r.onrender.com/aviator.apk" class="download-btn-header blinking-btn" target="_blank">⬇ DOWNLOAD APP</a>
+      <a href="#" class="subscribe-btn blinking-btn" id="headerSubscribeBtn">⬇ DOWNLOAD APP</a>
       <button class="hamburger" id="menuToggle" aria-label="Open menu" aria-expanded="false">☰</button>
     </div>
   </header>
@@ -636,7 +908,7 @@
         </p>
         <div class="hero-buttons">
           <!-- Changed Hero Button to DOWNLOAD with blinking -->
-          <a href="https://aviator-predictor-1w1r.onrender.com/aviator.apk" class="btn btn-primary blinking-btn" target="_blank">⬇ DOWNLOAD PREDICTOR</a>
+          <a href="#" class="btn btn-primary blinking-btn" id="heroSubscribeBtn">⬇ DOWNLOAD PREDICTOR</a>
           <a href="#how-it-works" class="btn btn-outline">▶ How It Works</a>
         </div>
         <div class="hero-features">
@@ -729,7 +1001,7 @@
       <h2>Ready to Bet Smarter?</h2>
       <p>Download the Predictor App today and start receiving real-time data.</p>
       <!-- Changed CTA Button to DOWNLOAD with blinking -->
-      <a href="https://aviator-predictor-1w1r.onrender.com/aviator.apk" class="btn btn-primary blinking-btn" target="_blank">⬇ DOWNLOAD PREDICTOR</a>
+      <a href="#" class="btn btn-primary blinking-btn" id="ctaSubscribeBtn">⬇ DOWNLOAD PREDICTOR</a>
     </section>
 
     <!-- FAQ -->
@@ -739,8 +1011,8 @@
       <p class="section-sub" style="margin-left:auto; margin-right:auto;">Can't find what you're looking for? Reach out to our team.</p>
       <div class="faq-list">
         <div class="faq-item"><h4>What is Aviator Predictor?</h4><p>Aviator Predictor is an Android app that provides real-time signals and game information to help users make informed decisions while playing.</p></div>
-        <div class="faq-item"><h4>How do I get the App?</h4><p>Click any of the "Download" buttons on this page. Once installed, you will need an Access Key to use it.</p></div>
-        <div class="faq-item"><h4>How do I get an Access Key?</h4><p>Access keys are provided to subscribers. Click the "Subscribe" link in the footer or menu to choose a plan and complete payment via WhatsApp.</p></div>
+        <div class="faq-item"><h4>How do I get the App?</h4><p>Click any of the "Download" buttons on this page to start your subscription. Once payment is complete, you will receive the app and your Access Key.</p></div>
+        <div class="faq-item"><h4>How do I get an Access Key?</h4><p>Access keys are provided to subscribers. Click the "Download" button to choose a plan and complete payment via WhatsApp.</p></div>
         <div class="faq-item"><h4>How accurate are the signals?</h4><p>Our algorithms maintain a 98.2% accuracy rate based on historical data. However, all games involve risk — always play responsibly.</p></div>
       </div>
     </section>
@@ -950,6 +1222,11 @@
       document.getElementById('mobileSubscribeBtn').addEventListener('click', showSubscription);
       document.getElementById('backHomeLink').addEventListener('click', showHome);
 
+      // All top buttons now open the subscription/payment popup
+      document.getElementById('headerSubscribeBtn').addEventListener('click', showSubscription);
+      document.getElementById('heroSubscribeBtn').addEventListener('click', showSubscription);
+      document.getElementById('ctaSubscribeBtn').addEventListener('click', showSubscription);
+
       // Modal Logic
       document.querySelectorAll('.plan-btn').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1010,13 +1287,13 @@
 
         const message = 
           `Hello Aviator Predictor Support! 👋\n\n` +
-          `I need an Access Key for the app:\n\n` +
+          `I am ready to download the app and need an Access Key:\n\n` +
           `📦 Plan: ${currentPlan.name}\n` +
           `💰 Price: $${currentPlan.price}\n` +
           `⏱ Duration: ${currentPlan.duration}\n\n` +
           `🌍 Country: ${countrySelect.options[countrySelect.selectedIndex].text}\n` +
           `💳 Payment: ${selectedPayment}\n\n` +
-          `Please send me the payment details.`;
+          `Please send me the payment details and my download link.`;
 
         const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
         window.open(waUrl, '_blank');
